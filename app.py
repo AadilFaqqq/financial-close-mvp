@@ -42,9 +42,6 @@ valid_passwords = [
     st.secrets["passwords"]["premium_sep"],
     st.secrets["passwords"]["premium_oct"],
 ]
-
-        
-    
     if password_input:
         if password_input in valid_passwords:
             st.success("✅ Access granted!")

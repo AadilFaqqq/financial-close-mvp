@@ -37,6 +37,7 @@ with col2:
     
     # Valid passwords (you can change these)
     valid_passwords = [
+        "aadil-admin-forever",      # ← YOUR PERMANENT PASSWORD
         "trial-aadil-30days",      # Free trial
         "premium-ca-sep-2024",      # Paid member (Sept)
         "premium-ca-oct-2024",      # Paid member (Oct)

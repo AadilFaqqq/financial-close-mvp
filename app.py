@@ -35,13 +35,15 @@ with col2:
     
     password_input = st.text_input("Password:", type="password", key="login_pass")
     
-    # Valid passwords (you can change these)
-    valid_passwords = [
-        "aadil-admin-forever",      # ← YOUR PERMANENT PASSWORD
-        "trial-aadil-30days",      # Free trial
-        "premium-ca-sep-2024",      # Paid member (Sept)
-        "premium-ca-oct-2024",      # Paid member (Oct)
-    ]
+    # Load passwords from Streamlit Secrets (server-side, not in code)
+valid_passwords = [
+    st.secrets["passwords"]["admin"],
+    st.secrets["passwords"]["trial"],
+    st.secrets["passwords"]["premium_sep"],
+    st.secrets["passwords"]["premium_oct"],
+]
+
+        
     
     if password_input:
         if password_input in valid_passwords:
@@ -49,7 +51,7 @@ with col2:
             st.session_state.authenticated = True
         else:
             st.error("❌ Invalid password")
-            st.info("📧 Contact aadil@example.com for access")
+            st.info("📧 Contact aadilnuriya1@gmail.com for access")
             st.stop()
     else:
         st.warning("👆 Enter password to continue")

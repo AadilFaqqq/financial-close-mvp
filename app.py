@@ -1,12 +1,6 @@
 import streamlit as st
-import pandas as pd
-import io
-from trial_balance import TrialBalanceProcessor
-from reconciliation import ReconciliationEngine
-from pdf_export import PDFReportGenerator
-from datetime import datetime
+import hashlib
 
-# Page configuration
 st.set_page_config(
     page_title="Financial Close Assistant",
     page_icon="📊",
@@ -14,7 +8,55 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom styling
+# ============ LOGIN SYSTEM ============
+st.markdown("""
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            border-radius: 10px;
+            background-color: #f0f2f6;
+            text-align: center;
+        }
+        .login-container h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Simple password check
+col1, col2, col3 = st.columns([1, 2, 1])
+
+with col2:
+    st.markdown("### 🔐 Financial Close Assistant")
+    st.markdown("Enter your access password")
+    
+    password_input = st.text_input("Password:", type="password", key="login_pass")
+    
+    # Valid passwords (you can change these)
+    valid_passwords = [
+        "trial-aadil-30days",      # Free trial
+        "premium-ca-sep-2024",      # Paid member (Sept)
+        "premium-ca-oct-2024",      # Paid member (Oct)
+    ]
+    
+    if password_input:
+        if password_input in valid_passwords:
+            st.success("✅ Access granted!")
+            st.session_state.authenticated = True
+        else:
+            st.error("❌ Invalid password")
+            st.info("📧 Contact aadil@example.com for access")
+            st.stop()
+    else:
+        st.warning("👆 Enter password to continue")
+        st.stop()
+
+# ============ ONLY RUNS IF PASSWORD IS CORRECT ============
+
+# Custom styling (same as before)
 st.markdown("""
     <style>
         .main {
@@ -63,8 +105,8 @@ st.sidebar.divider()
 st.sidebar.markdown("### About")
 st.sidebar.info("""
 **Version:** 1.0  
-**Purpose:** Automate month-end close processes for accounting firms and finance teams.  
-**Built by:** Trial Balance Assistant
+**Purpose:** Automate month-end close processes for accounting firms.  
+**Built by:** Financial Close Assistant
 """)
 
 # Initialize session state
@@ -77,7 +119,16 @@ if 'reconciliation_report' not in st.session_state:
 if 'original_gl' not in st.session_state:
     st.session_state.original_gl = None
 
-# ==================== HOME PAGE ====================
+# ============ REST OF YOUR APP (KEEP EVERYTHING BELOW EXACTLY AS BEFORE) ============
+# Import your modules
+from trial_balance import TrialBalanceProcessor
+from reconciliation import ReconciliationEngine
+from pdf_export import PDFReportGenerator
+from datetime import datetime
+import pandas as pd
+import io
+
+# HOME PAGE
 if page == "Home":
     st.title("Welcome to Financial Close Assistant")
     st.subheader("Automate Your Month-End Close Process")
@@ -132,7 +183,7 @@ if page == "Home":
             mime="text/csv"
         )
 
-# ==================== TRIAL BALANCE GENERATOR ====================
+# TRIAL BALANCE GENERATOR
 elif page == "Trial Balance Generator":
     st.title("Trial Balance Generator")
     st.markdown("Upload your General Ledger export and we'll generate a trial balance automatically.")
@@ -147,18 +198,15 @@ elif page == "Trial Balance Generator":
     
     if uploaded_file is not None:
         try:
-            # Read CSV
             gl_df = pd.read_csv(uploaded_file)
             st.session_state.original_gl = gl_df
             
-            # Process trial balance
             processor = TrialBalanceProcessor(gl_df)
             
             if processor.generate_trial_balance():
                 st.session_state.trial_balance_df = processor.trial_balance
                 st.session_state.summary = processor.summary
                 
-                # Display summary metrics
                 st.divider()
                 st.subheader("📈 Trial Balance Summary")
                 
@@ -189,7 +237,6 @@ elif page == "Trial Balance Generator":
                         processor.summary['num_accounts']
                     )
                 
-                # Balance status
                 if processor.summary['is_balanced']:
                     st.markdown("""
                         <div class="success-box">
@@ -203,14 +250,10 @@ elif page == "Trial Balance Generator":
                         </div>
                     """, unsafe_allow_html=True)
                 
-                # Display trial balance table
                 st.divider()
                 st.subheader("📋 Detailed Trial Balance")
                 
                 display_tb = processor.get_trial_balance()
-                
-                # Format for display
-                numeric_cols = ['Debit', 'Credit', 'Absolute_Balance']
                 
                 st.dataframe(
                     display_tb,
@@ -219,7 +262,6 @@ elif page == "Trial Balance Generator":
                     hide_index=True
                 )
                 
-                # Unbalanced accounts warning
                 unbalanced = processor.get_unbalanced_accounts()
                 if len(unbalanced) > 0:
                     st.divider()
@@ -232,19 +274,16 @@ elif page == "Trial Balance Generator":
                     unbalanced_df = pd.DataFrame(unbalanced)
                     st.dataframe(unbalanced_df, use_container_width=True, hide_index=True)
                 
-                # Export options
                 st.divider()
                 st.subheader("💾 Export Trial Balance")
                 
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    # Excel export
                     excel_buffer = io.BytesIO()
                     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
                         display_tb.to_excel(writer, sheet_name='Trial Balance', index=False)
                         
-                        # Summary sheet
                         summary_df = pd.DataFrame([
                             ['Total Debits', f"₹{processor.summary['total_debit']:,.2f}"],
                             ['Total Credits', f"₹{processor.summary['total_credit']:,.2f}"],
@@ -264,7 +303,6 @@ elif page == "Trial Balance Generator":
                     )
                 
                 with col2:
-                    # PDF export
                     pdf_generator = PDFReportGenerator(company_name=company_name)
                     pdf_buffer = pdf_generator.generate_trial_balance_pdf(
                         processor.trial_balance,
@@ -288,7 +326,7 @@ elif page == "Trial Balance Generator":
         except Exception as e:
             st.error(f"❌ Error reading file: {str(e)}")
 
-# ==================== RECONCILIATION REVIEW ====================
+# RECONCILIATION REVIEW
 elif page == "Reconciliation Review":
     st.title("Reconciliation & Review")
     st.markdown("Review your trial balance for suspicious entries and potential issues.")
@@ -296,12 +334,10 @@ elif page == "Reconciliation Review":
     if st.session_state.trial_balance_df is None:
         st.warning("⚠️ Please upload and generate a trial balance first!")
     else:
-        # Run reconciliation
         engine = ReconciliationEngine(st.session_state.trial_balance_df)
         recon_report = engine.generate_reconciliation_report()
         st.session_state.reconciliation_report = recon_report
         
-        # Overall status
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -315,7 +351,6 @@ elif page == "Reconciliation Review":
             balance = recon_report['balance_status']
             st.metric("Difference", f"₹{balance['difference']:,.0f}")
         
-        # Balance check
         st.divider()
         st.subheader("1️⃣ Balance Check Results")
         
@@ -340,7 +375,6 @@ elif page == "Reconciliation Review":
                     </div>
                 """.format(balance['difference']), unsafe_allow_html=True)
         
-        # Suspicious entries
         st.divider()
         st.subheader("2️⃣ Flagged Issues")
         
@@ -356,7 +390,6 @@ elif page == "Reconciliation Review":
             sus_df = pd.DataFrame(suspicious)
             st.dataframe(sus_df, use_container_width=True, hide_index=True)
         
-        # Round amounts
         st.divider()
         st.subheader("3️⃣ Round Amount Entries")
         
@@ -369,7 +402,6 @@ elif page == "Reconciliation Review":
             round_df = pd.DataFrame(round_amounts)
             st.dataframe(round_df, use_container_width=True, hide_index=True)
         
-        # Recommendations
         st.divider()
         st.subheader("💡 Recommendations")
         
@@ -377,7 +409,6 @@ elif page == "Reconciliation Review":
         for rec in recommendations:
             st.write(rec)
         
-        # Export reconciliation report
         st.divider()
         st.subheader("💾 Export Reconciliation Report")
         
@@ -396,7 +427,7 @@ elif page == "Reconciliation Review":
             mime="application/pdf"
         )
 
-# ==================== EXPORT REPORTS ====================
+# EXPORT REPORTS
 elif page == "Export Reports":
     st.title("Export Reports & Data")
     st.markdown("Download comprehensive reports and data for your records.")
@@ -411,7 +442,6 @@ elif page == "Export Reports":
         with col1:
             st.markdown("### Trial Balance Exports")
             
-            # Excel trial balance
             excel_buffer = io.BytesIO()
             with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
                 display_tb = pd.DataFrame(st.session_state.trial_balance_df)
@@ -436,7 +466,6 @@ elif page == "Export Reports":
                 key="export_tb_excel"
             )
             
-            # PDF trial balance
             company_name = st.text_input("Company Name", value="Your Company Name", key="company_1")
             pdf_generator = PDFReportGenerator(company_name=company_name)
             pdf_buffer = pdf_generator.generate_trial_balance_pdf(
@@ -475,7 +504,6 @@ elif page == "Export Reports":
         
         st.divider()
         
-        # Original GL export
         st.subheader("Original Data")
         
         csv_buffer = io.BytesIO()
@@ -494,6 +522,6 @@ st.divider()
 st.markdown("""
     <div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 2rem;'>
     <p><b>Financial Close Assistant v1.0</b> | Automate your month-end close process</p>
-    <p>For support or feature requests, contact support@example.com</p>
+    <p>For support, contact aadil@example.com</p>
     </div>
 """, unsafe_allow_html=True)

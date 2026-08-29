@@ -1,0 +1,21 @@
+Account_Code,Account_Name,Debit,Credit
+1001,Cash,150000,0
+1010,Bank Account,250000,0
+1100,Accounts Receivable,85000,0
+1200,Prepaid Expenses,15000,0
+1300,Inventory,200000,0
+1500,Fixed Assets,500000,0
+2100,Accounts Payable,0,120000
+2200,Short-term Loans,0,100000
+2300,Accrued Expenses,0,25000
+3100,Capital Stock,0,800000
+3200,Retained Earnings,0,200000
+4000,Sales Revenue,0,400000
+4100,Service Revenue,0,150000
+4200,Other Income,0,35000
+5000,Salary Expense,85000,0
+5100,Rent Expense,24000,0
+5200,Utilities Expense,12000,0
+5300,Office Supplies Expense,8000,0
+5400,Depreciation Expense,10000,0
+5500,Interest Expense,6000,0

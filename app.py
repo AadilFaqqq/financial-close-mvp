@@ -16,7 +16,11 @@ st.set_page_config(
 # ============ SIMPLE PASSWORD LOGIN ============
 password_input = st.text_input("🔐 Enter password:", type="password")
 valid_passwords = ["aadil-admin-forever", "trial-30days"]
-password_input = st.text_input("🔐 Enter password:", type="password")
+password_input = st.text_input(
+    "🔐 Enter password:",
+    type="password",
+    key="login_password"
+)
 valid_passwords = ["aadil-admin-forever", "trial-30days"]
 
 if password_input == "aadil-admin-forever":
